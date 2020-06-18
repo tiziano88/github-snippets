@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GitHub snippets</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link
+      rel="stylesheet"
+      href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css"
+    />
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  </head>
+  <style>
+    .snippets-card.mdl-card {
+      width: 1024px;
+    }
+    .snippets-card > .mdl-card__title {
+      color: #fff;
+      height: 176px;
+    }
+    .snippets-card > .mdl-card__menu {
+      color: #fff;
+    }
+  </style>
+  <body>
+    <script src="main.js"></script>
+    <form action="#" onsubmit="main()">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input type="text" id="username" class="mdl-textfield__input" />
+        <label for="username" class="mdl-textfield__label">username</label>
+      </div>
+      <input
+        type="submit"
+        id="submit"
+        class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
+      />
+    </form>
+    <div class="snippets-card mdl-card mdl-shadow--2dp">
+      <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">Snippets</h2>
+      </div>
+      <pre id="snippets" style="white-space: pre-wrap;"></pre>
+    </div>
+  </body>
+</html>

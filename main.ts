@@ -1,18 +1,18 @@
 "use strict";
 
-class UserEvent {
-  type!: string;
-  payload!: any;
-  created_at!: string;
+interface UserEvent {
+  type: string;
+  payload: any;
+  created_at: string;
 }
 
-class Issue {}
+interface Issue {}
 
-class PullRequest {
-  html_url!: string;
-  state!: string;
-  merged!: boolean;
-  title!: string;
+interface PullRequest {
+  html_url: string;
+  state: string;
+  merged: boolean;
+  title: string;
 }
 
 function map_append<K, V>(map: Map<K, V[]>, key: K, value: V) {
@@ -24,42 +24,98 @@ function map_append<K, V>(map: Map<K, V[]>, key: K, value: V) {
   }
 }
 
+function format_user(user: any | null): string {
+  if (user) {
+    return `[${user.login}](${user.html_url})`;
+  } else {
+    return "n/a";
+  }
+}
+
 async function main() {
-  let username = (document.getElementById("username") as HTMLInputElement)
-    .value;
+  const url_params = new URLSearchParams(window.location.search);
 
-  let start_date = Date.parse(
-    (document.getElementById("start_date") as HTMLInputElement).value
-  );
-  let end_date = Date.parse(
-    (document.getElementById("end_date") as HTMLInputElement).value
-  );
+  const username_input = document.getElementById(
+    "username"
+  ) as HTMLInputElement;
+  console.log(username_input);
 
-  let all_events = new Array<UserEvent>();
+  const start_date_input = document.getElementById(
+    "start_date"
+  ) as HTMLInputElement;
+  const end_date_input = document.getElementById(
+    "end_date"
+  ) as HTMLInputElement;
 
-  let res = [1, 2, 3].map((page) =>
+  const username = url_params.get("username") || "";
+  if (username == "") {
+    return;
+  }
+  username_input.value = username;
+
+  const start_date = url_params.get("start_date") || "";
+  if (start_date == "") {
+    return;
+  }
+  start_date_input.value = start_date;
+
+  const end_date = url_params.get("end_date") || "";
+  if (end_date == "") {
+    return;
+  }
+  end_date_input.value = end_date;
+
+  const all_events = new Array<UserEvent>();
+
+  const res = [1, 2, 3].map((page) =>
     fetch(
       `https://api.github.com/users/${username}/events?per_page=1000&page=${page}`
     )
   );
 
   for (let r of res) {
-    let r1 = await r;
+    const r1 = await r;
     all_events.push(...(await r1.json()));
   }
 
   console.log(all_events);
 
-  let events = all_events.filter((e) => {
-    return (
-      Date.parse(e.created_at) >= start_date &&
-      Date.parse(e.created_at) < end_date
-    );
+  const events = all_events.filter((e) => {
+    return e.created_at >= start_date && e.created_at < end_date;
   });
   console.log(events);
 
-  const issues = new Map<string, Issue>();
-  const pull_requests = new Map<string, PullRequest>();
+  events.sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+
+  /*
+  const issues = new Map<string, Promise<Issue>>();
+  const pull_requests = new Map<string, Promise<PullRequest>>();
+
+  for (let e of events) {
+    {
+      let issue_url = e.payload?.issue?.url;
+      if (issue_url) {
+        if (!issues.has(issue_url)) {
+          issues.set(
+            issue_url,
+            fetch(issue_url).then((r) => r.json())
+          );
+        }
+      }
+    }
+    {
+      let pr_url = e.payload?.pull_request?.url;
+      if (pr_url) {
+        if (!pull_requests.has(pr_url)) {
+          pull_requests.set(
+            pr_url,
+            fetch(pr_url).then((r) => r.json())
+          );
+        }
+      }
+    }
+  }
+  */
 
   let output = "";
 
@@ -67,12 +123,12 @@ async function main() {
   output += events
     .filter((v) => v.type == "IssuesEvent")
     .filter((v) => v.payload.action == "opened")
-    .map(
-      (v) =>
-        `- [${v.payload.issue.title}](${v.payload.issue.html_url}) (assignee: ${
-          v.payload.issue.assignee?.login || "n/a"
-        })`
-    )
+    .map((v) => {
+      const issue = v.payload.issue;
+      return `- [${issue.title}](${issue.html_url}) (assignee: ${format_user(
+        issue.assignee
+      )})`;
+    })
     .join("\n");
   output += "\n\n";
 
@@ -80,12 +136,12 @@ async function main() {
   output += events
     .filter((v) => v.type == "IssuesEvent")
     .filter((v) => v.payload.action == "reopened")
-    .map(
-      (v) =>
-        `- [${v.payload.issue.title}](${v.payload.issue.html_url}) (assignee: ${
-          v.payload.issue.assignee?.login || "n/a"
-        })`
-    )
+    .map((v) => {
+      const issue = v.payload.issue;
+      return `- [${issue.title}](${issue.html_url}) (assignee: ${format_user(
+        issue.assignee
+      )})`;
+    })
     .join("\n");
   output += "\n\n";
 
@@ -100,10 +156,13 @@ async function main() {
       }, new Map<string, UserEvent[]>())
       .entries() || []
   )
-    .map(
-      ([k, v]) =>
-        `- [${v[0].payload.issue.title}](${k}) (author: ${v[0].payload.issue.user.login}, comments: ${v.length})`
-    )
+    .map(([k, v]) => {
+      const latest = v[v.length - 1];
+      const issue = latest.payload.issue;
+      return `- [${issue.title}](${k}) (author: ${format_user(
+        issue.user
+      )}, comments: ${v.length})`;
+    })
     .join("\n");
   output += "\n\n";
 
@@ -111,10 +170,10 @@ async function main() {
   output += events
     .filter((v) => v.type == "PullRequestEvent")
     .filter((v) => v.payload.action == "opened")
-    .map(
-      (v) =>
-        `- [${v.payload.pull_request.title}](${v.payload.pull_request.html_url})`
-    )
+    .map((v) => {
+      const pull_request = v.payload.pull_request;
+      return `- [${pull_request.title}](${pull_request.html_url}) (status: ${pull_request.state})`;
+    })
     .join("\n");
   output += "\n\n";
 
@@ -122,10 +181,10 @@ async function main() {
   output += events
     .filter((v) => v.type == "PullRequestEvent")
     .filter((v) => v.payload.action == "closed")
-    .map(
-      (v) =>
-        `- [${v.payload.pull_request.title}](${v.payload.pull_request.html_url})`
-    )
+    .map((v) => {
+      const pull_request = v.payload.pull_request;
+      return `- [${pull_request.title}](${pull_request.html_url})`;
+    })
     .join("\n");
   output += "\n\n";
 
@@ -139,15 +198,20 @@ async function main() {
       }, new Map<string, UserEvent[]>())
       .entries() || []
   )
-    .map(
-      ([k, v]) =>
-        `- [${v[0].payload.pull_request.title}](${k}) (author: ${v[0].payload.pull_request.user.login}, comments: ${v.length})`
-    )
+    .map(([k, v]) => {
+      const latest = v[v.length - 1];
+      const pull_request = latest.payload.pull_request;
+      return `- [${pull_request.title}](${k}) (author: ${format_user(
+        pull_request.user
+      )}, comments: ${v.length})`;
+    })
     .join("\n");
   output += "\n\n";
 
-  let snippets = document.getElementById("snippets");
+  const snippets = document.getElementById("snippets");
   if (snippets) {
     snippets.innerText = output;
   }
 }
+
+main();

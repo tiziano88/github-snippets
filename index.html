@@ -15,28 +15,34 @@
   <style>
     .snippets-card.mdl-card {
       width: 1024px;
+      margin: 20px;
+      padding: 20px;
     }
     .snippets-card > .mdl-card__title {
-      color: #fff;
-      height: 176px;
+      color: #000;
+      height: 3em;
     }
     .snippets-card > .mdl-card__menu {
       color: #fff;
     }
   </style>
   <body>
-    <script src="main.js"></script>
-    <form action="#" onsubmit="main()">
+    <form action="" method="GET">
       <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
         <label for="username" class="mdl-textfield__label">username</label>
-        <input type="text" id="username" class="mdl-textfield__input" />
+        <input
+          type="text"
+          id="username"
+          name="username"
+          class="mdl-textfield__input"
+        />
       </div>
 
       <label for="start_date">start</label>
-      <input id="start_date" type="date" />
+      <input id="start_date" name="start_date" type="date" />
 
       <label for="end_date">end</label>
-      <input id="end_date" type="date" />
+      <input id="end_date" name="end_date" type="date" />
 
       <!-- <label for="week">week</label>
       <input id="week" type="week" /> -->
@@ -53,5 +59,6 @@
       </div>
       <pre id="snippets" style="white-space: pre-wrap;"></pre>
     </div>
+    <script src="main.js"></script>
   </body>
 </html>

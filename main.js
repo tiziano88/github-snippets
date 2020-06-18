@@ -8,12 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-class UserEvent {
-}
-class Issue {
-}
-class PullRequest {
-}
 function map_append(map, key, value) {
     const current = map.get(key);
     if (current == undefined) {
@@ -23,34 +17,85 @@ function map_append(map, key, value) {
         current.push(value);
     }
 }
+function format_user(user) {
+    if (user) {
+        return `[${user.login}](${user.html_url})`;
+    }
+    else {
+        return "n/a";
+    }
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        let username = document.getElementById("username")
-            .value;
-        let start_date = Date.parse(document.getElementById("start_date").value);
-        let end_date = Date.parse(document.getElementById("end_date").value);
-        let all_events = new Array();
-        let res = [1, 2, 3].map((page) => fetch(`https://api.github.com/users/${username}/events?per_page=1000&page=${page}`));
+        const url_params = new URLSearchParams(window.location.search);
+        const username_input = document.getElementById("username");
+        console.log(username_input);
+        const start_date_input = document.getElementById("start_date");
+        const end_date_input = document.getElementById("end_date");
+        const username = url_params.get("username") || "";
+        if (username == "") {
+            return;
+        }
+        username_input.value = username;
+        const start_date = url_params.get("start_date") || "";
+        if (start_date == "") {
+            return;
+        }
+        start_date_input.value = start_date;
+        const end_date = url_params.get("end_date") || "";
+        if (end_date == "") {
+            return;
+        }
+        end_date_input.value = end_date;
+        const all_events = new Array();
+        const res = [1, 2, 3].map((page) => fetch(`https://api.github.com/users/${username}/events?per_page=1000&page=${page}`));
         for (let r of res) {
-            let r1 = yield r;
+            const r1 = yield r;
             all_events.push(...(yield r1.json()));
         }
         console.log(all_events);
-        let events = all_events.filter((e) => {
-            return (Date.parse(e.created_at) >= start_date &&
-                Date.parse(e.created_at) < end_date);
+        const events = all_events.filter((e) => {
+            return e.created_at >= start_date && e.created_at < end_date;
         });
         console.log(events);
-        const issues = new Map();
-        const pull_requests = new Map();
+        events.sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+        /*
+        const issues = new Map<string, Promise<Issue>>();
+        const pull_requests = new Map<string, Promise<PullRequest>>();
+      
+        for (let e of events) {
+          {
+            let issue_url = e.payload?.issue?.url;
+            if (issue_url) {
+              if (!issues.has(issue_url)) {
+                issues.set(
+                  issue_url,
+                  fetch(issue_url).then((r) => r.json())
+                );
+              }
+            }
+          }
+          {
+            let pr_url = e.payload?.pull_request?.url;
+            if (pr_url) {
+              if (!pull_requests.has(pr_url)) {
+                pull_requests.set(
+                  pr_url,
+                  fetch(pr_url).then((r) => r.json())
+                );
+              }
+            }
+          }
+        }
+        */
         let output = "";
         output += "Opened issues:\n\n";
         output += events
             .filter((v) => v.type == "IssuesEvent")
             .filter((v) => v.payload.action == "opened")
             .map((v) => {
-            var _a;
-            return `- [${v.payload.issue.title}](${v.payload.issue.html_url}) (assignee: ${((_a = v.payload.issue.assignee) === null || _a === void 0 ? void 0 : _a.login) || "n/a"})`;
+            const issue = v.payload.issue;
+            return `- [${issue.title}](${issue.html_url}) (assignee: ${format_user(issue.assignee)})`;
         })
             .join("\n");
         output += "\n\n";
@@ -59,8 +104,8 @@ function main() {
             .filter((v) => v.type == "IssuesEvent")
             .filter((v) => v.payload.action == "reopened")
             .map((v) => {
-            var _a;
-            return `- [${v.payload.issue.title}](${v.payload.issue.html_url}) (assignee: ${((_a = v.payload.issue.assignee) === null || _a === void 0 ? void 0 : _a.login) || "n/a"})`;
+            const issue = v.payload.issue;
+            return `- [${issue.title}](${issue.html_url}) (assignee: ${format_user(issue.assignee)})`;
         })
             .join("\n");
         output += "\n\n";
@@ -73,21 +118,31 @@ function main() {
             return map;
         }, new Map())
             .entries() || [])
-            .map(([k, v]) => `- [${v[0].payload.issue.title}](${k}) (author: ${v[0].payload.issue.user.login}, comments: ${v.length})`)
+            .map(([k, v]) => {
+            const latest = v[v.length - 1];
+            const issue = latest.payload.issue;
+            return `- [${issue.title}](${k}) (author: ${format_user(issue.user)}, comments: ${v.length})`;
+        })
             .join("\n");
         output += "\n\n";
         output += "Opened pull requests:\n\n";
         output += events
             .filter((v) => v.type == "PullRequestEvent")
             .filter((v) => v.payload.action == "opened")
-            .map((v) => `- [${v.payload.pull_request.title}](${v.payload.pull_request.html_url})`)
+            .map((v) => {
+            const pull_request = v.payload.pull_request;
+            return `- [${pull_request.title}](${pull_request.html_url}) (status: ${pull_request.state})`;
+        })
             .join("\n");
         output += "\n\n";
         output += "Closed pull requests:\n\n";
         output += events
             .filter((v) => v.type == "PullRequestEvent")
             .filter((v) => v.payload.action == "closed")
-            .map((v) => `- [${v.payload.pull_request.title}](${v.payload.pull_request.html_url})`)
+            .map((v) => {
+            const pull_request = v.payload.pull_request;
+            return `- [${pull_request.title}](${pull_request.html_url})`;
+        })
             .join("\n");
         output += "\n\n";
         output += "Commented on pull requests:\n\n";
@@ -98,12 +153,17 @@ function main() {
             return map;
         }, new Map())
             .entries() || [])
-            .map(([k, v]) => `- [${v[0].payload.pull_request.title}](${k}) (author: ${v[0].payload.pull_request.user.login}, comments: ${v.length})`)
+            .map(([k, v]) => {
+            const latest = v[v.length - 1];
+            const pull_request = latest.payload.pull_request;
+            return `- [${pull_request.title}](${k}) (author: ${format_user(pull_request.user)}, comments: ${v.length})`;
+        })
             .join("\n");
         output += "\n\n";
-        let snippets = document.getElementById("snippets");
+        const snippets = document.getElementById("snippets");
         if (snippets) {
             snippets.innerText = output;
         }
     });
 }
+main();

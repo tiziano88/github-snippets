@@ -39,11 +39,13 @@ function main() {
         username_input.value = username;
         const start_date = url_params.get("start_date") || "";
         if (start_date == "") {
+            start_date = Date().toLocaleDateString();
             return;
         }
         start_date_input.value = start_date;
         const end_date = url_params.get("end_date") || "";
         if (end_date == "") {
+            start_date = Date().toLocaleDateString() + 7;
             return;
         }
         end_date_input.value = end_date;

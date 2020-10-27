@@ -6,7 +6,7 @@ interface UserEvent {
   created_at: string;
 }
 
-interface Issue {}
+interface Issue { }
 
 interface PullRequest {
   html_url: string;

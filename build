@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o xtrace
+set -o pipefail
+
+# sudo npm install --global typescript
+tsc

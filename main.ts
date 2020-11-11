@@ -34,7 +34,7 @@ function format_user(user: any | null): string {
 
 async function main() {
   const url_params = new URLSearchParams(window.location.search);
-
+  var today = new Date().toLocaleDateString();
   const username_input = document.getElementById(
     "username"
   ) as HTMLInputElement;
@@ -119,6 +119,7 @@ async function main() {
 
   let output = "";
 
+  output += "Current date: " + today + "\n\n";
   output += "Opened issues:\n\n";
   output += events
     .filter((v) => v.type == "IssuesEvent")

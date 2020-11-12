@@ -33,17 +33,20 @@ function main() {
         const start_date_input = document.getElementById("start_date");
         const end_date_input = document.getElementById("end_date");
         const username = url_params.get("username") || "";
+        var currentDate =new Date();
         if (username == "") {
             return;
         }
         username_input.value = username;
         const start_date = url_params.get("start_date") || "";
+        start_date_input.value = currentDate;
         if (start_date == "") {
-            start_date = Date().toLocaleDateString();
+            start_date = currentDate;
             return;
         }
         start_date_input.value = start_date;
         const end_date = url_params.get("end_date") || "";
+        end_date_input.value = 0;
         if (end_date == "") {
             start_date = Date().toLocaleDateString() + 7;
             return;

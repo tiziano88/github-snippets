@@ -28,15 +28,11 @@ function format_user(user) {
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const url_params = new URLSearchParams(window.location.search);
+        var today = new Date().toLocaleDateString();
         const username_input = document.getElementById("username");
         console.log(username_input);
         const start_date_input = document.getElementById("start_date");
         const end_date_input = document.getElementById("end_date");
-        const username = url_params.get("username") || "";
-        if (username == "") {
-            return;
-        }
-        username_input.value = username;
         const start_date = url_params.get("start_date") || "";
         if (start_date == "") {
             return;
@@ -47,6 +43,11 @@ function main() {
             return;
         }
         end_date_input.value = end_date;
+        const username = url_params.get("username") || "";
+        if (username == "") {
+            return;
+        }
+        username_input.value = username;
         const all_events = new Array();
         const res = [1, 2, 3].map((page) => fetch(`https://api.github.com/users/${username}/events?per_page=1000&page=${page}`));
         for (let r of res) {
@@ -89,6 +90,7 @@ function main() {
         }
         */
         let output = "";
+        output += "Current date: " + today + "\n\n";
         output += "Opened issues:\n\n";
         output += events
             .filter((v) => v.type == "IssuesEvent")

@@ -46,13 +46,7 @@ async function main() {
   const end_date_input = document.getElementById(
     "end_date"
   ) as HTMLInputElement;
-
-  const username = url_params.get("username") || "";
-  if (username == "") {
-    return;
-  }
-  username_input.value = username;
-
+  
   const start_date = url_params.get("start_date") || "";
   if (start_date == "") {
     return;
@@ -64,6 +58,12 @@ async function main() {
     return;
   }
   end_date_input.value = end_date;
+
+  const username = url_params.get("username") || "";
+  if (username == "") {
+    return;
+  }
+  username_input.value = username;
 
   const all_events = new Array<UserEvent>();
 

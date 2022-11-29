@@ -3,6 +3,7 @@
 interface UserEvent {
   type: string;
   payload: any;
+  repo: any;
   created_at: string;
 }
 
@@ -53,15 +54,21 @@ async function main() {
   }
   username_input.value = username;
 
-  const start_date = url_params.get("start_date") || "";
+  let start_date = url_params.get("start_date") || "";
   if (start_date == "") {
-    return;
+    let start = new Date();
+    // Monday of last week.
+    start.setDate(start.getDate() - start.getDay() - 6);
+    start_date = start.toISOString().split("T")[0];
   }
   start_date_input.value = start_date;
 
-  const end_date = url_params.get("end_date") || "";
+  let end_date = url_params.get("end_date") || "";
   if (end_date == "") {
-    return;
+    let end = new Date();
+    // Monday of last week.
+    end.setDate(end.getDate() - end.getDay() + 1);
+    end_date = end.toISOString().split("T")[0];
   }
   end_date_input.value = end_date;
 
@@ -125,9 +132,7 @@ async function main() {
     .filter((v) => v.payload.action == "opened")
     .map((v) => {
       const issue = v.payload.issue;
-      return `- [${issue.title}](${issue.html_url}) (assignee: ${format_user(
-        issue.assignee
-      )})`;
+      return `- [${v.repo.name}#${issue.number}](${issue.html_url}) ${issue.title}`;
     })
     .join("\n");
   output += "\n\n";
@@ -138,9 +143,7 @@ async function main() {
     .filter((v) => v.payload.action == "reopened")
     .map((v) => {
       const issue = v.payload.issue;
-      return `- [${issue.title}](${issue.html_url}) (assignee: ${format_user(
-        issue.assignee
-      )})`;
+      return `- [${v.repo.name}#${issue.number}](${issue.html_url}) ${issue.title}`;
     })
     .join("\n");
   output += "\n\n";
@@ -159,9 +162,7 @@ async function main() {
     .map(([k, v]) => {
       const latest = v[v.length - 1];
       const issue = latest.payload.issue;
-      return `- [${issue.title}](${k}) (author: ${format_user(
-        issue.user
-      )}, comments: ${v.length})`;
+      return `- [${latest.repo.name}#${issue.number}](${issue.html_url}) ${issue.title}`;
     })
     .join("\n");
   output += "\n\n";
@@ -172,7 +173,7 @@ async function main() {
     .filter((v) => v.payload.action == "opened")
     .map((v) => {
       const pull_request = v.payload.pull_request;
-      return `- [${pull_request.title}](${pull_request.html_url}) (status: ${pull_request.state})`;
+      return `- [${v.repo.name}#${pull_request.number}](${pull_request.html_url}) ${pull_request.title}`;
     })
     .join("\n");
   output += "\n\n";
@@ -183,7 +184,7 @@ async function main() {
     .filter((v) => v.payload.action == "closed")
     .map((v) => {
       const pull_request = v.payload.pull_request;
-      return `- [${pull_request.title}](${pull_request.html_url})`;
+      return `- [${v.repo.name}#${pull_request.number}](${pull_request.html_url}) ${pull_request.title}`;
     })
     .join("\n");
   output += "\n\n";
@@ -201,9 +202,7 @@ async function main() {
     .map(([k, v]) => {
       const latest = v[v.length - 1];
       const pull_request = latest.payload.pull_request;
-      return `- [${pull_request.title}](${k}) (author: ${format_user(
-        pull_request.user
-      )}, comments: ${v.length})`;
+      return `- [${latest.repo.name}#${pull_request.number}](${pull_request.html_url}) ${pull_request.title}`;
     })
     .join("\n");
   output += "\n\n";
